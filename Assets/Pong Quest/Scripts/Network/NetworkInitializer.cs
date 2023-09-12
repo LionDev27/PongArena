@@ -9,9 +9,9 @@ public class NetworkInitializer : MonoBehaviour, INetworkRunnerCallbacks
 {
     public static NetworkInitializer Instance { get; private set; }
 
-    [SerializeField] private GameObject _canvas;
+    public static Action OnLobbyCompleted;
+
     [SerializeField] private Transform _spawnPos1, _spawnPos2;
-    [SerializeField] private GameObject _cameraPrefab;
     [SerializeField] private NetworkPrefabRef _playerPrefab;
 
     private Dictionary<PlayerRef, NetworkObject> _players = new();
@@ -49,7 +49,7 @@ public class NetworkInitializer : MonoBehaviour, INetworkRunnerCallbacks
     async private void StartGame(GameMode mode)
     {
         Debug.Log("Starting " + mode);
-        _canvas.SetActive(false);
+        UIController.Instance.HideMainMenu();
 
         // Create the Fusion runner and let it know that we will be providing user input
         _runner = gameObject.AddComponent<NetworkRunner>();
@@ -65,12 +65,12 @@ public class NetworkInitializer : MonoBehaviour, INetworkRunnerCallbacks
         });
     }
 
-    public bool LobbyCompleted()
+    private bool LobbyCompleted()
     {
         return _players.Count >= 2;
     }
 
-    public bool HasPlayer()
+    private bool HasPlayer()
     {
         return _players.Count > 0;
     }
@@ -81,14 +81,15 @@ public class NetworkInitializer : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (runner.IsServer && !LobbyCompleted())
         {
-            Vector3 pos;
-            pos = HasPlayer() ? _spawnPos2.position : _spawnPos1.position;
-            var networkObject = runner.Spawn(_playerPrefab, pos, Quaternion.identity, player);
+            var playerPos = HasPlayer() ? _spawnPos2.position : _spawnPos1.position;
+            var playerRot = HasPlayer() ? Quaternion.Euler(0, 0, 180) : Quaternion.identity;
+            var networkObject = runner.Spawn(_playerPrefab, playerPos, playerRot, player);
+
             _players.Add(player, networkObject);
-            
-            if (LobbyCompleted())
-                GameManager.OnLobbyCompleted?.Invoke();
         }
+        
+        if (LobbyCompleted())
+            OnLobbyCompleted?.Invoke();
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)

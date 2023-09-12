@@ -1,5 +1,4 @@
-﻿using Fusion;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class LocalCameraController : MonoBehaviour
 {

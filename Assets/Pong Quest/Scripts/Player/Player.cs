@@ -1,5 +1,4 @@
-﻿using System;
-using Fusion;
+﻿using Fusion;
 using UnityEngine;
 
 public class Player : NetworkBehaviour
